@@ -1,0 +1,150 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, {Component} from 'react';
+import {Text, View, Image, TouchableOpacity, StyleSheet} from 'react-native';
+import IonIcons from 'react-native-vector-icons/Ionicons';
+import {connect} from 'react-redux';
+
+class ProfileDrawer extends Component {
+  componentDidMount() {
+    console.log('This is from drawer');
+  }
+
+  render() {
+    return (
+      <View style={styles.container}>
+        <View style={styles.profileIconContainer}>
+          {this.props.user.image ? (
+            <Image
+              source={{uri: this.props.user.image}}
+              style={styles.profileImage}
+            />
+          ) : (
+            <IonIcons name={'person'} size={60} />
+          )}
+        </View>
+        {this.props.user.email !== '' ? (
+          <>
+            <Text style={styles.username} numberOfLines={1}>
+              Hi,
+              <Text> {this.props.user.name}</Text>
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => this.props.navigation.navigate('BottomTab')}
+              style={styles.drawerScreens}
+              activeOpacity={0.7}>
+              <Text style={styles.buttonsText}>Home</Text>
+              <IonIcons name={'chevron-forward'} size={26} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => this.props.navigation.navigate('DashboardSeller')}
+              style={styles.drawerScreens}
+              activeOpacity={0.7}>
+              <Text style={styles.buttonsText}>Akun & Toko Saya</Text>
+              <IonIcons name={'chevron-forward'} size={26} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => this.props.navigation.navigate('Cart')}
+              style={styles.drawerScreens}
+              activeOpacity={0.7}>
+              <Text style={styles.buttonsText}>Keranjang</Text>
+              <IonIcons name={'chevron-forward'} size={26} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={() =>
+                AsyncStorage.removeItem(
+                  'token',
+                  this.props.navigation.navigate('Auth'),
+                )
+              }>
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity
+            style={styles.loginButton}
+            activeOpacity={0.6}
+            onPress={() => {
+              this.props.navigation.closeDrawer();
+              this.props.navigation.navigate('Auth');
+            }}>
+            <Text style={styles.logoutText}>Log In or Register</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+  },
+  profileIconContainer: {
+    width: '100%',
+    height: '15%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    marginVertical: 10,
+  },
+  profileImage: {
+    height: 120,
+    width: 120,
+    borderRadius: 100,
+  },
+  profileIcon: {
+    borderRadius: 100,
+    padding: 25,
+    backgroundColor: '#808080de',
+    margin: 15,
+  },
+  buttonsText: {
+    fontSize: 16,
+  },
+  username: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    backgroundColor: 'red',
+    padding: 7,
+    borderRadius: 10,
+  },
+  logoutText: {
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  loginButton: {
+    backgroundColor: 'teal',
+    padding: 13,
+    borderRadius: 10,
+  },
+  drawerScreens: {
+    width: '100%',
+    flexDirection: 'row',
+    borderBottomColor: 'black',
+    borderBottomWidth: 2,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
+    paddingVertical: 5,
+  },
+});
+const mapStateToProps = (state) => {
+  return {
+    user: state,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    changeUser: (data) => dispatch({type: 'CHANGE/USER', payload: data}),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProfileDrawer);
