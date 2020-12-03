@@ -14,6 +14,7 @@ import CurrencyFormat from 'react-currency-format';
 import IonIcons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Picker} from '@react-native-picker/picker';
+import Chat from '../chat/eachChat';
 
 export default class Product extends Component {
   constructor(props) {
@@ -22,6 +23,7 @@ export default class Product extends Component {
       modal: false,
       jumlah_pesan: '1',
       modalPesan: false,
+      modalChat: false,
       arrStock: this.Looped_Stock(),
     };
   }
@@ -68,9 +70,24 @@ export default class Product extends Component {
   }
 
   render() {
-    const {name, price, image, description, weight, stock} = this.props.product;
+    const {
+      name,
+      price,
+      image,
+      description,
+      weight,
+      stock,
+      customer_id,
+    } = this.props.product;
     return (
       <View>
+        {/* ---Modal untuk Chat */}
+        <Modal
+          animationType={'slide'}
+          visible={this.state.modalChat}
+          onRequestClose={() => this.setState({modalChat: false})}>
+          <Chat id_seller={customer_id} />
+        </Modal>
         {/* ---Modal untuk Pesan */}
         <Modal
           animationType={'slide'}
@@ -85,6 +102,7 @@ export default class Product extends Component {
             <View style={styles.modalOrder}>
               <Text>Jumlah Pesan</Text>
               <Picker
+                mode={'dropdown'}
                 selectedValue={this.state.jumlah_pesan}
                 style={styles.picker}
                 onValueChange={(itemValue) =>
@@ -155,13 +173,22 @@ export default class Product extends Component {
                   )}
                 />
               </View>
-              <TouchableOpacity style={styles.cartButton}>
-                <IonIcons
-                  name={'cart'}
-                  size={35}
-                  onPress={() => this.setState({modalPesan: true})}
-                />
-              </TouchableOpacity>
+              <View>
+                <TouchableOpacity style={styles.cartButton}>
+                  <IonIcons
+                    name={'cart'}
+                    size={35}
+                    onPress={() => this.setState({modalPesan: true})}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.chatButton}>
+                  <IonIcons
+                    name={'chatbox'}
+                    size={35}
+                    onPress={() => this.setState({modalChat: true})}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
             <Text style={styles.productDescTitle}>Deskripsi Produk</Text>
             <Text style={styles.productDesc}>{description}</Text>
@@ -216,6 +243,11 @@ const styles = StyleSheet.create({
   cartButton: {
     position: 'absolute',
     right: 5,
+  },
+  chatButton: {
+    position: 'absolute',
+    right: 5,
+    bottom: 0,
   },
   productInfo: {
     padding: 20,

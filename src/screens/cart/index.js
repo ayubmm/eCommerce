@@ -104,7 +104,7 @@ class Cart extends Component {
 
     let form = new FormData();
 
-    form.append('tujuan', 'Asalann....');
+    form.append('tujuan', 'Kretek, Bantul');
     AsyncStorage.getItem('token').then((token) => {
       console.log('ini from', form);
       fetch(endpoint, {

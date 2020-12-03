@@ -46,7 +46,7 @@ class EditPropduct extends Component {
           onPress: () => this.deleteProduct(),
         },
       ],
-      {cancelable: false},
+      {cancelable: true},
     );
   };
 
@@ -190,11 +190,6 @@ class EditPropduct extends Component {
             <TouchableOpacity onPress={() => this.takePic()}>
               <Image source={this.state.image} style={styles.image} />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => this.deleteConf()}>
-              <Text style={styles.addText}>Hapus Produk</Text>
-            </TouchableOpacity>
           </View>
           <Text>Nama Produk</Text>
           <TextInput
@@ -241,11 +236,18 @@ class EditPropduct extends Component {
             onChangeText={(text) => this.setState({description: text})}
             style={[styles.input, styles.inputDesc]}
           />
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => this.gettoken()}>
-            <Text style={styles.addText}>Edit Produk</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonsCont}>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => this.deleteConf()}>
+              <Text style={styles.addText}>Hapus Produk</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => this.gettoken()}>
+              <Text style={styles.addText}>Edit Produk</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </>
     );
@@ -256,6 +258,11 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 4,
+  },
+  buttonsCont: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-evenly',
   },
   title: {
     fontSize: 25,

@@ -5,7 +5,7 @@ export default function user(
     created_at: 'created_at_2020',
     email: '',
     email_verified_at: null,
-    id: 2,
+    id: 0,
     image: null,
     name: '',
     no_telpon: null,

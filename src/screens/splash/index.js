@@ -33,7 +33,8 @@ class Splash extends Component {
         } else if (resjson.data) {
           this.updateState(resjson.data);
         }
-      });
+      })
+      .catch((err) => console.log('error dari splash profile', err));
   }
 
   componentWillUnmount() {

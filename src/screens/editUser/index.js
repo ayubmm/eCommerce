@@ -123,6 +123,13 @@ class EditUser extends Component {
       .catch((err) => console.log(err));
   }
 
+  checkPhone() {
+    if(this.state.phone) {
+      return this.state.phone.toString()
+    }
+    return '';
+  }
+
   render() {
     return (
       <>
@@ -150,7 +157,7 @@ class EditUser extends Component {
           <Text>No. telpon</Text>
           <TextInput
             maxLength={10}
-            value={this.state.phone.toString()}
+            value={this.checkPhone()}
             keyboardType={'phone-pad'}
             placeholder={'Telpon'}
             onChangeText={(text) => this.setState({phone: text})}

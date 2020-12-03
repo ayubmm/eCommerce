@@ -9,6 +9,8 @@ import {
   TextInput,
   Modal,
   ToastAndroid,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import IonIcons from 'react-native-vector-icons/Ionicons';
 import CurrencyFormat from 'react-currency-format';
@@ -51,23 +53,30 @@ function SearchScreen({
   setSearchComponent,
   searchData,
   openSearchProduct,
+  loading,
 }) {
   if (searchComponent) {
-    return (
-      <View style={styles.searchComponent}>
-        <View style={styles.closeSearchCont}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setSearchComponent()}>
-            <IonIcons color={'red'} name={'close-circle'} size={40} />
-          </TouchableOpacity>
-          <Text style={styles.searchTitle}>Hasil Pencarian</Text>
+    if (loading) {
+      <View style={styles.loadingCont}>
+        <ActivityIndicator size={50} color={'black'} style={styles.loading} />
+      </View>;
+    } else {
+      return (
+        <View style={styles.searchComponent}>
+          <View style={styles.closeSearchCont}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setSearchComponent()}>
+              <IonIcons color={'red'} name={'close-circle'} size={40} />
+            </TouchableOpacity>
+            <Text style={styles.searchTitle}>Hasil Pencarian</Text>
+          </View>
+          <ScrollView contentContainerStyle={styles.scrollView}>
+            <ItemBox products={searchData} openProduct={openSearchProduct} />
+          </ScrollView>
         </View>
-        <ScrollView contentContainerStyle={styles.scrollView}>
-          <ItemBox products={searchData} openProduct={openSearchProduct} />
-        </ScrollView>
-      </View>
-    );
+      );
+    }
   }
   return <></>;
 }
@@ -80,11 +89,13 @@ class Home extends Component {
     productDetail: {},
     products: [],
     searchData: [],
+    refreshing: false,
+    loading: true,
   };
 
   search() {
     if (this.state.search) {
-      this.setState({searchComponent: true});
+      this.setState({searchComponent: true, loading: true});
       const endpoint = 'https://tokonline.herokuapp.com/api/product/search';
       let form = new FormData();
       form.append('search', this.state.search);
@@ -96,7 +107,7 @@ class Home extends Component {
         .then((res) => res.json())
         .then((resJson) => {
           console.log('ini search ', resJson[0].data);
-          this.setState({searchData: resJson[0].data});
+          this.setState({searchData: resJson[0].data, loading: false});
         });
     } else {
       ToastAndroid.show('Mohon isi teks pencarian!', 3500);
@@ -122,7 +133,8 @@ class Home extends Component {
       .then((res) => res.json())
       .then((resJson) => {
         if (resJson[0].data.length !== 0) {
-          this.setState({products: resJson[0].data});
+          console.log('ini resjson allProducts', JSON.stringify(resJson));
+          this.setState({products: resJson[0].data, loading: false});
         }
       })
       .catch((err) => console.log('error catch home', err));
@@ -137,6 +149,11 @@ class Home extends Component {
 
   componentDidMount() {
     this.getAllProduct();
+  }
+
+  onRefresh() {
+    this.getAllProduct();
+    this.setState({refreshing: false});
   }
 
   render() {
@@ -158,15 +175,8 @@ class Home extends Component {
               value={this.state.search}
               returnKeyType={'search'}
               onSubmitEditing={() => this.search()}
-              onChangeText={(text) => this.setState({search: text})}>
-              {/* <CurrencyFormat
-                  value={this.state.search}
-                  displayType={'text'}
-                  thousandSeparator={'.'}
-                  decimalSeparator={','}
-                  prefix={'Rp.'}
-                /> */}
-            </TextInput>
+              onChangeText={(text) => this.setState({search: text})}
+            />
             <TouchableOpacity>
               {this.state.search !== '' && (
                 <IonIcons
@@ -180,13 +190,31 @@ class Home extends Component {
           </View>
         </View>
         {/* ---Komponen Untuk Search---*/}
-        <ScrollView contentContainerStyle={styles.scrollView}>
-          <ItemBox
-            products={this.state.products}
-            openProduct={(index) => this.openProduct(index)}
-          />
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refreshing}
+              onRefresh={() => this.onRefresh()}
+            />
+          }
+          contentContainerStyle={styles.scrollView}>
+          {this.state.loading ? (
+            <View style={styles.loadingCont}>
+              <ActivityIndicator
+                size={50}
+                color={'black'}
+                style={styles.loading}
+              />
+            </View>
+          ) : (
+            <ItemBox
+              products={this.state.products}
+              openProduct={(index) => this.openProduct(index)}
+            />
+          )}
         </ScrollView>
         <SearchScreen
+          loading={this.state.loading}
           searchComponent={this.state.searchComponent}
           searchData={this.state.searchData}
           openSearchProduct={(index) => this.openSearchProduct(index)}
@@ -215,6 +243,13 @@ class Home extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingCont: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  loading: {
+    margin: 100,
   },
   header: {
     height: 65,

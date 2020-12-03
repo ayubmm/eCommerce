@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Modal,
   ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
 import IonIcons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -39,6 +40,8 @@ class DashboardSeller extends Component {
     },
     products: [],
     loading: true,
+    tab: 'Product',
+    orders: [],
   };
 
   openProduct = (productId) => {
@@ -48,7 +51,23 @@ class DashboardSeller extends Component {
     });
   };
 
-  componentDidUpdate() {
+  openOrder() {
+    AsyncStorage.getItem('token').then((token) => {
+      fetch('https://tokonline.herokuapp.com/api/gasorder', {
+        headers: {
+          Authorization: 'Bearer ' + token,
+        },
+      })
+        .then((res) => res.json())
+        .then((resJson) => {
+          console.log('ini product orderan', resJson);
+          this.setState({orders: resJson.data, loading: false});
+        })
+        .catch((err) => console.log('error catch open Order', err));
+    });
+  }
+
+  geyMyProducts() {
     if (this.state.loading === true) {
       AsyncStorage.getItem('token').then((token) => {
         fetch('https://tokonline.herokuapp.com/api/ambil', {
@@ -68,26 +87,26 @@ class DashboardSeller extends Component {
     }
   }
 
-  componentDidMount() {
-    if (this.state.loading === true) {
-      AsyncStorage.getItem('token').then((token) => {
-        fetch('https://tokonline.herokuapp.com/api/ambil', {
-          headers: {
-            Authorization: 'Bearer ' + token,
-          },
-        })
-          .then((res) => res.json())
-          .then((resJson) => {
-            console.log(resJson);
-            if (resJson.produk.length > 0) {
-              this.setState({products: resJson.produk, loading: false});
-            } else {
-              this.props.navigation.navigate('Splash');
-            }
-          })
-          .catch((err) => console.log('error catch home', err));
-      });
+  componentDidUpdate() {
+    if (this.state.loading) {
+      this.geyMyProducts();
     }
+  }
+
+  componentDidMount() {
+    this.geyMyProducts();
+  }
+
+  tabCust(tab) {
+    if (this.state.tab === tab) {
+      return {backgroundColor: 'teal'};
+    } else {
+      return {backgroundColor: '#eee'};
+    }
+  }
+
+  switchTab(tab) {
+    this.setState({tab: tab, loading: true});
   }
 
   render() {
@@ -131,11 +150,11 @@ class DashboardSeller extends Component {
                   onPress={() =>
                     console.log('Ini products', this.state.products)
                   }
-                />{' '}
+                />
                 {this.props.user.email}
               </Text>
               <Text style={styles.sellerDetailText}>
-                <IonIcons size={20} name={'md-location-sharp'} />{' '}
+                <IonIcons size={20} name={'md-location-sharp'} />
                 {this.props.user.alamat}
               </Text>
               <Text style={styles.sellerDetailText}>
@@ -144,12 +163,44 @@ class DashboardSeller extends Component {
             </View>
           </View>
           <View style={styles.productsTitle}>
-            <Text style={styles.productsTitleText}>Produk Kami</Text>
+            <TouchableOpacity
+              onPress={() => this.switchTab('Product')}
+              style={[this.tabCust('Product'), styles.tab]}>
+              <Text style={styles.productsTitleText}>Produk Kami</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                this.switchTab('Order');
+                this.openOrder();
+              }}
+              style={[this.tabCust('Order'), styles.tab]}>
+              <Text style={styles.productsTitleText}>Pesanan</Text>
+            </TouchableOpacity>
           </View>
-          <ItemBox
-            products={this.state.products}
-            openProduct={(index) => this.openProduct(index)}
-          />
+          {this.state.loading ? (
+            <View style={styles.loadingCont}>
+              <ActivityIndicator
+                size={50}
+                color={'black'}
+                style={styles.loading}
+              />
+            </View>
+          ) : this.state.tab === 'Product' ? (
+            <ItemBox
+              products={this.state.products}
+              openProduct={(index) => this.openProduct(index)}
+            />
+          ) : this.state.orders.length > 0 ? (
+            this.state.orders.map((v, i) => {
+              return (
+                <View key={i}>
+                  <Text>Ada Pesanan</Text>
+                </View>
+              );
+            })
+          ) : (
+            <Text>Belum ada pesanan</Text>
+          )}
         </ScrollView>
         <TouchableOpacity
           activeOpacity={0.95}
@@ -179,11 +230,12 @@ class DashboardSeller extends Component {
             product={this.state.productDetail}
             close={() =>
               this.setState({
-                productModal: !this.state.productModal,
+                productModal: false,
               })
             }
           />
         </Modal>
+
         {/* ---Modal untuk tambah produk--- */}
         <Modal
           animationType={'slide'}
@@ -202,6 +254,7 @@ class DashboardSeller extends Component {
             }
           />
         </Modal>
+
         {/* ---Modal untuk edit user--- */}
         <Modal
           animationType={'slide'}
@@ -227,6 +280,12 @@ class DashboardSeller extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  tab: {
+    flex: 1,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   imageProfile: {
     width: 100,
@@ -285,6 +344,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#f2f2f2',
     justifyContent: 'space-between',
   },
+  loadingCont: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  loading: {
+    margin: 100,
+  },
   productContainer: {
     width: '46%',
     backgroundColor: '#f2f2f2',
@@ -334,9 +400,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
     backgroundColor: 'white',
     elevation: 20,
+    flexDirection: 'row',
   },
   productsTitleText: {
     fontSize: 20,

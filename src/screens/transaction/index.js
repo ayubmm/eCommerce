@@ -17,6 +17,7 @@ import IonIcons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import CurrencyFormat from 'react-currency-format';
 import ImagePicker from 'react-native-image-picker';
+import Product from '../product/index';
 
 function Progress({item}) {
   let name = '';
@@ -82,6 +83,9 @@ export default class Transaction extends Component {
       uri: '',
     }, //(image)
     loading: true,
+    productDetail: {},
+    loadingDetail: true,
+    modalProduct: false,
   };
 
   onRefresh() {
@@ -141,6 +145,34 @@ export default class Transaction extends Component {
             console.log('resjson dari detail pesanan === ', resJson);
             if (resJson.status === 'Success') {
               this.setState({cartDetail: resJson.data, loading: false});
+            }
+          })
+          .catch((err) => console.log(err));
+      })
+      .catch((err) => console.log(err));
+  }
+
+  getDetailedProduct(id) {
+    console.log('id product dari history ', id);
+    this.setState({modalProduct: true, loadingDetail: true});
+    AsyncStorage.getItem('token')
+      .then((token) => {
+        console.log('mulai get product history');
+
+        const endpoint = 'https://tokonline.herokuapp.com/api/product/' + id;
+
+        fetch(endpoint)
+          .then((res) => res.json())
+          .then((resJson) => {
+            console.log(
+              'resjson dari detail setiap product dari history  === ',
+              resJson,
+            );
+            if (resJson.status === 'Success') {
+              this.setState({
+                productDetail: resJson.data,
+                loadingDetail: false,
+              });
             }
           })
           .catch((err) => console.log(err));
@@ -251,14 +283,20 @@ export default class Transaction extends Component {
               <>
                 {this.state.cartDetail.map((v, i) => {
                   return (
-                    <View key={i} style={styles.productReview}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        console.log(v.product_id);
+                        this.getDetailedProduct(v.product_id);
+                      }}
+                      key={i}
+                      style={styles.productReview}>
                       <Text style={styles.reviewText}>
                         Jumlah pesanan : {v.jumlah}
                       </Text>
                       <Text style={styles.reviewText}>
                         Total Harga : {v.jumlah_harga}
                       </Text>
-                    </View>
+                    </TouchableOpacity>
                   );
                 })}
                 <TextInput
@@ -308,6 +346,26 @@ export default class Transaction extends Component {
               </>
             )}
           </ScrollView>
+        </Modal>
+        <Modal
+          visible={this.state.modalProduct}
+          onRequestClose={() =>
+            this.setState({
+              modalProduct: false,
+            })
+          }>
+          {this.state.loadingDetail ? (
+            <ActivityIndicator style={{padding: 50}} size={45} color={'teal'} />
+          ) : (
+            <Product
+              product={this.state.productDetail}
+              close={() =>
+                this.setState({
+                  modalProduct: false,
+                })
+              }
+            />
+          )}
         </Modal>
       </ScrollView>
     );
