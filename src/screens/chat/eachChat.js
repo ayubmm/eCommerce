@@ -10,18 +10,37 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  ToastAndroid,
 } from 'react-native';
 import {TextInput} from 'react-native-gesture-handler';
 import IonIcons from 'react-native-vector-icons/Ionicons';
 import {connect} from 'react-redux';
+import Pusher from 'pusher-js/react-native';
+
+// Enable pusher logging - don't include this in production
+Pusher.logToConsole = true;
+
+var pusher = new Pusher('5debdef554206164cb9e', {
+  cluster: 'ap1',
+});
+
+var channel = pusher.subscribe('my-channel');
 
 class Chat extends Component {
-  state = {
-    chats: [],
-    loading: true,
-    message: '',
-    refreshing: false,
-  };
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      chats: [],
+      loading: true,
+      message: '',
+      refreshing: false,
+    };
+
+    channel.bind('my-event', () => {
+      this.getChat();
+    });
+  }
 
   sendChat() {
     let form = new FormData();
@@ -63,9 +82,8 @@ class Chat extends Component {
           console.log('ini resJson dari message', resJson);
           this.setState(() => {
             resJson.data.sort((a, b) => a.id - b.id);
-            return {chats: resJson.data};
+            return {chats: resJson.data, loading: false};
           });
-          this.setState({loading: false});
         })
         .catch((err) => console.log('ini error dari get chat == ', err));
     });
@@ -77,11 +95,11 @@ class Chat extends Component {
     this.getChat();
   }
 
-  componentDidUpdate() {
-    if (this.state.loading) {
-      this.getChat();
-    }
-  }
+  // componentDidUpdate() {
+  //   if (this.state.loading) {
+  //     this.getChat();
+  //   }
+  // }
 
   onRefresh() {
     this.getChat();
@@ -92,6 +110,10 @@ class Chat extends Component {
     return (
       <View style={styles.container}>
         <ScrollView
+          ref={(ref) => (this.scrollView = ref)}
+          onContentSizeChange={() => {
+            this.scrollView.scrollToEnd({animated: true});
+          }}
           refreshControl={
             <RefreshControl
               refreshing={this.state.refreshing}
@@ -99,38 +121,39 @@ class Chat extends Component {
             />
           }
           contentContainerStyle={styles.scrollView}>
-          {this.state.loading ? (
+          {this.state.chats.length > 0
+            ? this.state.chats.map((v, i) => {
+                if (v.from !== this.props.user.id) {
+                  return (
+                    <View style={styles.chatBubbleContainerLeft} key={i}>
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        style={styles.chatBubbleLeft}>
+                        <Text style={styles.chatText}>{v.message}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                } else {
+                  return (
+                    <View style={styles.chatBubbleContainerRight} key={i}>
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        style={styles.chatBubbleRight}>
+                        <Text style={styles.chatText}>{v.message}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                }
+              })
+            : !this.state.loading && (
+                <Text style={styles.empty}>Chat is empty</Text>
+              )}
+          {this.state.loading && (
             <ActivityIndicator
               size={50}
               color={'white'}
               style={styles.loading}
             />
-          ) : this.state.chats.length > 0 ? (
-            this.state.chats.map((v, i) => {
-              if (v.from !== this.props.user.id) {
-                return (
-                  <View style={styles.chatBubbleContainerLeft} key={i}>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      style={styles.chatBubbleLeft}>
-                      <Text style={styles.chatText}>{v.message}</Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              } else {
-                return (
-                  <View style={styles.chatBubbleContainerRight} key={i}>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      style={styles.chatBubbleRight}>
-                      <Text style={styles.chatText}>{v.message}</Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              }
-            })
-          ) : (
-            <Text style={styles.empty}>Chat is empty</Text>
           )}
         </ScrollView>
         <View style={styles.footer}>
@@ -142,7 +165,7 @@ class Chat extends Component {
             onChangeText={(text) => this.setState({message: text})}
           />
           <TouchableOpacity onPress={() => this.sendChat()}>
-            <IonIcons name={'send'} size={35} />
+            <IonIcons name={'send'} size={45} color={'#eee'} />
           </TouchableOpacity>
         </View>
       </View>

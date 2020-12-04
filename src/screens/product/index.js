@@ -15,8 +15,9 @@ import IonIcons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Picker} from '@react-native-picker/picker';
 import Chat from '../chat/eachChat';
+import {connect} from 'react-redux';
 
-export default class Product extends Component {
+class Product extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -62,6 +63,7 @@ export default class Product extends Component {
             if (resJson.status === 'Success') {
               this.setState({modalPesan: false});
               ToastAndroid.show('Pesanan berhasil ditambah', 4000);
+              this.props.changeUser({didCart: true});
             }
           })
           .catch((err) => console.log('dari fetch', err));
@@ -305,3 +307,17 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 });
+
+const mapStateToProps = (state) => {
+  return {
+    user: state,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    changeUser: (data) => dispatch({type: 'CHANGE/USER', payload: data}),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Product);

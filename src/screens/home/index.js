@@ -291,15 +291,15 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#f2f2f2',
     justifyContent: 'space-between',
-    paddingTop: 5,
+    padding: 6,
     paddingBottom: 100,
   },
   productContainer: {
-    width: '46%',
+    width: '48%',
     backgroundColor: '#f2f2f2',
-    margin: 6,
     borderRadius: 5,
     elevation: 10,
+    marginVertical: 5,
   },
   ItemBoxText: {
     padding: 5,

@@ -17,7 +17,34 @@ import AddProduct from '../addProduct/index';
 import EditProduct from '../editProduct/index';
 import EditUser from '../editUser/index';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CurrencyFormat from 'react-currency-format';
 import {ItemBox} from '../home/index';
+
+function OrderBox({products}) {
+  return Object.keys(products).map((v, i) => {
+    return (
+      <View key={i} style={styles.productContainer}>
+        <Image style={styles.image} source={{uri: products[v].product.image}} />
+        <View style={styles.ItemBoxText}>
+          <Text style={styles.productName}>{products[v].product.name}</Text>
+          <CurrencyFormat
+            value={products[v].jumlah_harga}
+            displayType={'text'}
+            thousandSeparator={'.'}
+            decimalSeparator={','}
+            prefix={'Rp.'}
+            renderText={(value) => (
+              <Text style={styles.productPrice}>Total Harga : {value}</Text>
+            )}
+          />
+          <Text style={styles.productPrice}>
+            Jumlah pesanan : {products[v].jumlah}
+          </Text>
+        </View>
+      </View>
+    );
+  });
+}
 
 class DashboardSeller extends Component {
   state = {
@@ -25,6 +52,7 @@ class DashboardSeller extends Component {
     productModal: false,
     addModal: false,
     userModal: false,
+    ordersData: {},
     productDetail: {
       category: '1',
       description: '',
@@ -41,7 +69,6 @@ class DashboardSeller extends Component {
     products: [],
     loading: true,
     tab: 'Product',
-    orders: [],
   };
 
   openProduct = (productId) => {
@@ -60,8 +87,10 @@ class DashboardSeller extends Component {
       })
         .then((res) => res.json())
         .then((resJson) => {
-          console.log('ini product orderan', resJson);
-          this.setState({orders: resJson.data, loading: false});
+          console.log('ini product orderan === ', JSON.stringify(resJson));
+          this.setState({ordersData: resJson.data, loading: false}, () => {
+            console.log('Ini  state ordersData', this.state.ordersData);
+          });
         })
         .catch((err) => console.log('error catch open Order', err));
     });
@@ -77,7 +106,7 @@ class DashboardSeller extends Component {
         })
           .then((res) => res.json())
           .then((resJson) => {
-            console.log(resJson.produk);
+            // console.log('ini resjson produk saya === ', resJson);
             if (resJson.produk.length > 0) {
               this.setState({products: resJson.produk, loading: false});
             }
@@ -190,14 +219,8 @@ class DashboardSeller extends Component {
               products={this.state.products}
               openProduct={(index) => this.openProduct(index)}
             />
-          ) : this.state.orders.length > 0 ? (
-            this.state.orders.map((v, i) => {
-              return (
-                <View key={i}>
-                  <Text>Ada Pesanan</Text>
-                </View>
-              );
-            })
+          ) : Object.keys(this.state.ordersData).length > 0 ? (
+            <OrderBox products={this.state.ordersData} />
           ) : (
             <Text>Belum ada pesanan</Text>
           )}
@@ -343,6 +366,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#f2f2f2',
     justifyContent: 'space-between',
+    padding: 6,
   },
   loadingCont: {
     width: '100%',
@@ -352,7 +376,7 @@ const styles = StyleSheet.create({
     margin: 100,
   },
   productContainer: {
-    width: '46%',
+    width: '100%',
     backgroundColor: '#f2f2f2',
     marginVertical: 5,
     borderRadius: 5,
@@ -364,7 +388,8 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   productName: {
-    fontSize: 18,
+    fontSize: 23,
+    fontWeight: 'bold',
   },
   productPrice: {
     fontSize: 17,

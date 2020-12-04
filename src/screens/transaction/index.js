@@ -18,6 +18,7 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import CurrencyFormat from 'react-currency-format';
 import ImagePicker from 'react-native-image-picker';
 import Product from '../product/index';
+import {connect} from 'react-redux';
 
 function Progress({item}) {
   let name = '';
@@ -66,7 +67,7 @@ function OrderBox({products, getDetail}) {
   });
 }
 
-export default class Transaction extends Component {
+class Transaction extends Component {
   state = {
     cartItems: [],
     cartDetail: [],
@@ -253,6 +254,13 @@ export default class Transaction extends Component {
 
   componentDidMount() {
     this.getHistory();
+  }
+
+  componentDidUpdate() {
+    if (this.props.user.didCheckout) {
+      this.getHistory();
+      this.props.changeUser({didCheckout: false});
+    }
   }
 
   render() {
@@ -447,3 +455,17 @@ const styles = StyleSheet.create({
     right: 5,
   },
 });
+
+const mapStateToProps = (state) => {
+  return {
+    user: state,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    changeUser: (data) => dispatch({type: 'CHANGE/USER', payload: data}),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Transaction);

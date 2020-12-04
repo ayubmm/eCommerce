@@ -1,6 +1,8 @@
 export default function user(
   state = {
     didUpdate: false,
+    didCart: false,
+    didCheckout: false,
     alamat: null,
     created_at: 'created_at_2020',
     email: '',

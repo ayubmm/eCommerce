@@ -15,7 +15,7 @@ import CurrencyFormat from 'react-currency-format';
 import IonIcons from 'react-native-vector-icons/Ionicons';
 
 export function CartBox({
-  deleteItem = () => console.log('delet eOrder'),
+  deleteItem = () => console.log('delete Order'),
   products,
 }) {
   return products.map((v, i) => {
@@ -69,7 +69,25 @@ class Cart extends Component {
           onPress: () => this.deleteOrder(id),
         },
       ],
-      {cancelable: false},
+      {cancelable: true},
+    );
+  }
+
+  orderConf(id) {
+    Alert.alert(
+      'Checkout Pesanan?',
+      'Apakah anda yakin untuk checkout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Checkout',
+          onPress: () => this.konfirmasiCheckout(),
+        },
+      ],
+      {cancelable: true},
     );
   }
 
@@ -115,7 +133,10 @@ class Cart extends Component {
         body: form,
       })
         .then((res) => res.json())
-        .then((resJson) => console.log('ini ResJson === ', resJson));
+        .then((resJson) => {
+          console.log('ini ResJson === ', resJson);
+          this.props.changeUser({didCheckout: true});
+        });
     });
   }
 
@@ -148,6 +169,13 @@ class Cart extends Component {
     this.getCart();
   }
 
+  componentDidUpdate() {
+    if (this.props.user.didCart) {
+      this.getCart();
+      this.props.changeUser({didCart: false});
+    }
+  }
+
   render() {
     return (
       <>
@@ -161,7 +189,7 @@ class Cart extends Component {
         <TouchableOpacity
           style={styles.checkOutButton}
           onPress={() => {
-            this.konfirmasiCheckout();
+            this.orderConf();
           }}>
           <Text style={styles.checkOutText}>Checkout</Text>
         </TouchableOpacity>
