@@ -23,7 +23,7 @@ class Product extends Component {
     this.state = {
       modal: false,
       jumlah_pesan: '1',
-      modalPesan: false,
+      modalOrder: false,
       modalChat: false,
       arrStock: this.Looped_Stock(),
     };
@@ -61,14 +61,32 @@ class Product extends Component {
           .then((resJson) => {
             console.log(resJson);
             if (resJson.status === 'Success') {
-              this.setState({modalPesan: false});
+              this.setState({modalOrder: false});
               ToastAndroid.show('Pesanan berhasil ditambah', 4000);
               this.props.changeUser({didCart: true});
+            } else {
+              ToastAndroid.show(resJson.msg, 4000);
             }
           })
           .catch((err) => console.log('dari fetch', err));
       })
       .catch((err) => console.log('dari AsyncStorage', err));
+  }
+
+  handleChat() {
+    if (this.props.user.email) {
+      this.setState({modalChat: true});
+    } else {
+      ToastAndroid.show('Silahkan Login terlebih dahulu', 500);
+    }
+  }
+
+  handleCart() {
+    if (this.props.user.email) {
+      this.setState({modalOrder: true});
+    } else {
+      ToastAndroid.show('Silahkan Login terlebih dahulu', 500);
+    }
   }
 
   render() {
@@ -93,13 +111,13 @@ class Product extends Component {
         {/* ---Modal untuk Pesan */}
         <Modal
           animationType={'slide'}
-          visible={this.state.modalPesan}
-          onRequestClose={() => this.setState({modalPesan: false})}
+          visible={this.state.modalOrder}
+          onRequestClose={() => this.setState({modalOrder: false})}
           transparent={true}>
           <>
             <TouchableOpacity
               style={styles.modalBack}
-              onPress={() => this.setState({modalPesan: false})}
+              onPress={() => this.setState({modalOrder: false})}
             />
             <View style={styles.modalOrder}>
               <Text>Jumlah Pesan</Text>
@@ -180,14 +198,14 @@ class Product extends Component {
                   <IonIcons
                     name={'cart'}
                     size={35}
-                    onPress={() => this.setState({modalPesan: true})}
+                    onPress={() => this.handleCart()}
                   />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.chatButton}>
                   <IonIcons
                     name={'chatbox'}
                     size={35}
-                    onPress={() => this.setState({modalChat: true})}
+                    onPress={() => this.handleChat()}
                   />
                 </TouchableOpacity>
               </View>
@@ -252,7 +270,7 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   productInfo: {
-    padding: 20,
+    padding: 10,
     width: '100%',
   },
   productHead: {
@@ -276,15 +294,19 @@ const styles = StyleSheet.create({
     fontSize: 19,
     fontWeight: 'bold',
     width: '100%',
-    backgroundColor: '#eee',
+    backgroundColor: 'teal',
     marginVertical: 15,
     textAlign: 'center',
     padding: 10,
+    color: '#eee',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
   },
   productDesc: {
     fontSize: 16,
     textAlign: 'auto',
     marginVertical: 10,
+    paddingHorizontal: 5,
   },
   productStockWeight: {
     fontSize: 15,

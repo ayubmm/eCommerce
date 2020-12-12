@@ -12,8 +12,8 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 
 export default class Registration extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       name: '',
       email: '',
@@ -28,7 +28,7 @@ export default class Registration extends Component {
     for (let key in this.state) {
       data.append(key, this.state[key]);
     }
-    console.log(data);
+    // console.log(data);
     fetch('https://tokonline.herokuapp.com/api/register', {
       method: 'POST',
       // headers: {
@@ -46,7 +46,7 @@ export default class Registration extends Component {
     })
       .then((res) => res.json())
       .then((resJson) => {
-        console.log(resJson);
+        // console.log(resJson);
         if (resJson.user) {
           this.setState({
             email: '',
@@ -191,10 +191,3 @@ const styles = StyleSheet.create({
     padding: 10,
   },
 });
-
-var keys = '';
-
-for (var key in styles) {
-  keys += key + ', ';
-}
-console.log(keys);

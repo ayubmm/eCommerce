@@ -57,9 +57,11 @@ function SearchScreen({
 }) {
   if (searchComponent) {
     if (loading) {
-      <View style={styles.loadingCont}>
-        <ActivityIndicator size={50} color={'black'} style={styles.loading} />
-      </View>;
+      return (
+        <View style={styles.loadingCont}>
+          <ActivityIndicator size={50} color={'black'} style={styles.loading} />
+        </View>
+      );
     } else {
       return (
         <View style={styles.searchComponent}>
@@ -72,12 +74,19 @@ function SearchScreen({
             <Text style={styles.searchTitle}>Hasil Pencarian</Text>
           </View>
           <ScrollView contentContainerStyle={styles.scrollView}>
-            <ItemBox products={searchData} openProduct={openSearchProduct} />
+            {searchData.length === 0 ? (
+              <Text style={styles.notFound}>
+                Hasil Pencarian Tidak Ditemukan
+              </Text>
+            ) : (
+              <ItemBox products={searchData} openProduct={openSearchProduct} />
+            )}
           </ScrollView>
         </View>
       );
     }
   }
+
   return <></>;
 }
 
@@ -91,11 +100,12 @@ class Home extends Component {
     searchData: [],
     refreshing: false,
     loading: true,
+    searchLoad: false,
   };
 
   search() {
     if (this.state.search) {
-      this.setState({searchComponent: true, loading: true});
+      this.setState({searchComponent: true, searchLoad: true});
       const endpoint = 'https://tokonline.herokuapp.com/api/product/search';
       let form = new FormData();
       form.append('search', this.state.search);
@@ -106,8 +116,8 @@ class Home extends Component {
       })
         .then((res) => res.json())
         .then((resJson) => {
-          console.log('ini search ', resJson[0].data);
-          this.setState({searchData: resJson[0].data, loading: false});
+          // console.log('ini search ', resJson[0].data);
+          this.setState({searchData: resJson[0].data, searchLoad: false});
         });
     } else {
       ToastAndroid.show('Mohon isi teks pencarian!', 3500);
@@ -129,15 +139,21 @@ class Home extends Component {
   };
 
   getAllProduct() {
+    console.log('Ambil semua product...');
     fetch('https://tokonline.herokuapp.com/api/product')
       .then((res) => res.json())
       .then((resJson) => {
         if (resJson[0].data.length !== 0) {
-          console.log('ini resjson allProducts', JSON.stringify(resJson));
+          // console.log('ini resjson allProducts', JSON.stringify(resJson));
           this.setState({products: resJson[0].data, loading: false});
         }
       })
-      .catch((err) => console.log('error catch home', err));
+      .catch((err) => {
+        console.log('error catch home', err);
+        setTimeout(() => {
+          this.getAllProduct();
+        }, 1500);
+      });
   }
 
   componentDidUpdate() {
@@ -157,12 +173,13 @@ class Home extends Component {
   }
 
   render() {
-    console.log('ini didupdate', this.props.user.didUpdate);
     return (
       <View style={styles.container}>
         <View style={styles.header}>
           <IonIcons
-            onPress={() => this.props.navigation.openDrawer()}
+            onPress={() => {
+              this.props.navigation.openDrawer();
+            }}
             name={'menu'}
             size={50}
             color={'black'}
@@ -214,7 +231,7 @@ class Home extends Component {
           )}
         </ScrollView>
         <SearchScreen
-          loading={this.state.loading}
+          loading={this.state.searchLoad}
           searchComponent={this.state.searchComponent}
           searchData={this.state.searchData}
           openSearchProduct={(index) => this.openSearchProduct(index)}
@@ -244,8 +261,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  notFound: {
+    textAlign: 'center',
+    width: '100%',
+    fontSize: 18,
+  },
   loadingCont: {
     width: '100%',
+    height: '100%',
     alignItems: 'center',
   },
   loading: {
@@ -295,7 +318,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   productContainer: {
-    width: '48%',
+    width: '49%',
     backgroundColor: '#f2f2f2',
     borderRadius: 5,
     elevation: 10,

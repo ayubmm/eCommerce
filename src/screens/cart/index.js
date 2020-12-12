@@ -7,8 +7,11 @@ import {
   View,
   TouchableOpacity,
   Image,
-  Alert,
+  Modal,
   ToastAndroid,
+  ActivityIndicator,
+  TextInput,
+  Alert,
 } from 'react-native';
 import {connect} from 'react-redux';
 import CurrencyFormat from 'react-currency-format';
@@ -32,12 +35,12 @@ export function CartBox({
             prefix={'Rp.'}
             renderText={(value) => (
               <Text style={styles.productPrice}>
-                Total Harga : {'\n'} {value}
+                Total Harga {'\n'} {value}
               </Text>
             )}
           />
           <Text style={styles.productPrice}>
-            Jumlah pesanan : {'\n' + v.jumlah}
+            Jumlah pesanan {'\n' + v.jumlah}
           </Text>
         </View>
         <TouchableOpacity
@@ -53,6 +56,10 @@ export function CartBox({
 class Cart extends Component {
   state = {
     cartItems: [],
+    loading: true,
+    confirmLoad: false,
+    modal: false,
+    address: '',
   };
 
   deleteConf(id) {
@@ -73,22 +80,12 @@ class Cart extends Component {
     );
   }
 
-  orderConf(id) {
-    Alert.alert(
-      'Checkout Pesanan?',
-      'Apakah anda yakin untuk checkout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Checkout',
-          onPress: () => this.konfirmasiCheckout(),
-        },
-      ],
-      {cancelable: true},
-    );
+  orderConf() {
+    if (this.state.cartItems.length > 0) {
+      this.setState({modal: true});
+    } else {
+      ToastAndroid.show('Tidak ada barang di keranjang', 4000);
+    }
   }
 
   deleteOrder(id) {
@@ -118,11 +115,22 @@ class Cart extends Component {
   }
 
   konfirmasiCheckout() {
+    if (this.state.address) {
+      this.checkout();
+    } else {
+      ToastAndroid.show('Masukkan alamat anda dengan benar', 2500);
+    }
+  }
+
+  checkout() {
+    console.log('mulai checkout...');
+    this.setState({confirmLoad: true});
     var endpoint = 'https://tokonline.herokuapp.com/api/konfirmasi-check-out';
 
     let form = new FormData();
 
-    form.append('tujuan', 'Kretek, Bantul');
+    form.append('tujuan', this.state.address);
+
     AsyncStorage.getItem('token').then((token) => {
       console.log('ini from', form);
       fetch(endpoint, {
@@ -134,13 +142,21 @@ class Cart extends Component {
       })
         .then((res) => res.json())
         .then((resJson) => {
-          console.log('ini ResJson === ', resJson);
-          this.props.changeUser({didCheckout: true});
+          console.log('ini ResJson checkout === ', resJson);
+          if (resJson.status === 'Success') {
+            this.props.changeUser({
+              didCheckout: true,
+              didCart: true,
+            });
+            this.setState({confirmLoad: false, modal: false});
+            ToastAndroid.show('Checkout berhasil', 2000);
+          }
         });
     });
   }
 
   getCart() {
+    this.setState({loading: true});
     AsyncStorage.getItem('token')
       .then((token) => {
         console.log('mulai ambil data cart');
@@ -155,9 +171,20 @@ class Cart extends Component {
         })
           .then((res) => res.json())
           .then((resJson) => {
-            console.log('resjson dari getcart === ', resJson.data);
-            if (resJson.status === 'Success') {
-              this.setState({cartItems: resJson.data});
+            console.log('resjson dari getcart === ', resJson);
+            if (resJson.data) {
+              this.setState({
+                cartItems: resJson.data,
+                loading: false,
+                modal: false,
+              });
+            } else {
+              this.setState({
+                modal: false,
+                loading: false,
+                cartItems: [],
+              });
+              ToastAndroid.show('Keranjang Kosong', 1500);
             }
           })
           .catch((err) => console.log(err));
@@ -171,6 +198,7 @@ class Cart extends Component {
 
   componentDidUpdate() {
     if (this.props.user.didCart) {
+      console.log('component did update jalan...');
       this.getCart();
       this.props.changeUser({didCart: false});
     }
@@ -180,19 +208,52 @@ class Cart extends Component {
     return (
       <>
         <ScrollView contentContainerStyle={styles.container}>
-          <CartBox
-            products={this.state.cartItems}
-            openProduct={() => console.log('Open product not available')}
-            deleteItem={(id) => this.deleteConf(id)}
-          />
+          {this.state.loading ? (
+            <ActivityIndicator style={{padding: 50}} size={45} color={'teal'} />
+          ) : (
+            <CartBox
+              products={this.state.cartItems}
+              openProduct={() => console.log('Open product not available')}
+              deleteItem={(id) => this.deleteConf(id)}
+            />
+          )}
         </ScrollView>
         <TouchableOpacity
-          style={styles.checkOutButton}
+          style={styles.checkOutConfirmButton}
           onPress={() => {
             this.orderConf();
           }}>
           <Text style={styles.checkOutText}>Checkout</Text>
         </TouchableOpacity>
+        <Modal
+          animationType={'fade'}
+          transparent={true}
+          visible={this.state.modal}
+          onRequestClose={() => this.setState({modal: false})}>
+          <View style={styles.modalBack}>
+            <View style={styles.modalOrder}>
+              <Text style={styles.addressTitle}>
+                Masukkan Alamat Pengiriman
+              </Text>
+              <TextInput
+                value={this.state.address}
+                onChangeText={(text) => this.setState({address: text})}
+                placeholder={'Alamat'}
+                style={styles.input}
+                autoCapitalize={'words'}
+              />
+              <TouchableOpacity
+                style={styles.checkOutButton}
+                onPress={() => this.konfirmasiCheckout()}>
+                {this.state.confirmLoad ? (
+                  <ActivityIndicator size={25} color={'white'} />
+                ) : (
+                  <Text style={styles.promptButtonText}>Checkout</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </>
     );
   }
@@ -204,14 +265,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexGrow: 1,
     backgroundColor: '#f2f2f2',
-    justifyContent: 'space-between',
+    padding: 6,
+    justifyContent: 'center',
+  },
+  addressTitle: {
+    fontSize: 19,
+  },
+  input: {
+    width: '100%',
+    borderWidth: 0.5,
+    borderColor: 'teal',
+    borderRadius: 10,
+    marginVertical: 15,
+  },
+  modalBack: {
+    flex: 1,
+    backgroundColor: '#808080b8',
+    justifyContent: 'center',
+  },
+  modalOrder: {
+    width: '80%',
+    height: 220,
+    position: 'absolute',
+    backgroundColor: 'white',
+    alignSelf: 'center',
     padding: 15,
+    borderRadius: 15,
+    elevation: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   checkOutButton: {
     backgroundColor: 'teal',
     padding: 10,
     alignItems: 'center',
-    width: '100%',
+    elevation: 25,
+    borderRadius: 10,
+  },
+  promptButtonText: {
+    fontSize: 17,
+    color: 'white',
+  },
+  checkOutConfirmButton: {
+    backgroundColor: 'teal',
+    padding: 10,
+    alignItems: 'center',
     elevation: 25,
   },
   checkOutText: {
@@ -225,11 +323,11 @@ const styles = StyleSheet.create({
   },
   productContainer: {
     width: '100%',
-    backgroundColor: '#f2f2f2',
-    margin: 6,
+    backgroundColor: '#fff',
     borderRadius: 5,
     elevation: 10,
     flexDirection: 'row',
+    marginVertical: 5,
   },
   ItemBoxText: {
     padding: 5,
@@ -238,6 +336,8 @@ const styles = StyleSheet.create({
     height: 120,
     width: 100,
     resizeMode: 'cover',
+    borderTopLeftRadius: 5,
+    borderBottomLeftRadius: 5,
   },
   productName: {
     fontSize: 20,

@@ -135,7 +135,11 @@ class DashboardSeller extends Component {
   }
 
   switchTab(tab) {
-    this.setState({tab: tab, loading: true});
+    this.setState((prevState) => {
+      if (prevState.tab !== tab) {
+        return {tab: tab, loading: true};
+      }
+    });
   }
 
   render() {
@@ -180,24 +184,27 @@ class DashboardSeller extends Component {
                     console.log('Ini products', this.state.products)
                   }
                 />
-                {this.props.user.email}
+                {'   ' + this.props.user.email}
               </Text>
               <Text style={styles.sellerDetailText}>
                 <IonIcons size={20} name={'md-location-sharp'} />
-                {this.props.user.alamat}
+                {'   ' + this.props.user.alamat}
               </Text>
               <Text style={styles.sellerDetailText}>
-                <IonIcons size={20} name={'call'} /> {this.props.user.no_telpon}
+                <IonIcons size={20} name={'call'} />
+                {'   ' + this.props.user.no_telpon}
               </Text>
             </View>
           </View>
           <View style={styles.productsTitle}>
             <TouchableOpacity
+              activeOpacity={0.9}
               onPress={() => this.switchTab('Product')}
               style={[this.tabCust('Product'), styles.tab]}>
               <Text style={styles.productsTitleText}>Produk Kami</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              activeOpacity={0.9}
               onPress={() => {
                 this.switchTab('Order');
                 this.openOrder();
@@ -364,7 +371,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     flexDirection: 'row',
     flexGrow: 1,
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#fff',
     justifyContent: 'space-between',
     padding: 6,
   },

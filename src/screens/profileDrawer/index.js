@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {Component} from 'react';
 import {Text, View, Image, TouchableOpacity, StyleSheet} from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import IonIcons from 'react-native-vector-icons/Ionicons';
 import {connect} from 'react-redux';
 
@@ -9,7 +10,15 @@ class ProfileDrawer extends Component {
     console.log('This is from drawer');
   }
 
+  // navigationColor(screen) {
+  //   if(this.props.route.name === screen)
+  // }
+
   render() {
+    console.log(
+      'ini state history dari drawer === ',
+      this.props.state.history[this.props.state.history.length - 1].key,
+    );
     return (
       <View style={styles.container}>
         <View style={styles.profileIconContainer}>
@@ -33,21 +42,30 @@ class ProfileDrawer extends Component {
               onPress={() => this.props.navigation.navigate('BottomTab')}
               style={styles.drawerScreens}
               activeOpacity={0.7}>
-              <Text style={styles.buttonsText}>Home</Text>
+              <View style={styles.navigation}>
+                <IonIcons name={'home'} size={25} />
+                <Text style={styles.buttonsText}>Home</Text>
+              </View>
               <IonIcons name={'chevron-forward'} size={26} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => this.props.navigation.navigate('DashboardSeller')}
               style={styles.drawerScreens}
               activeOpacity={0.7}>
-              <Text style={styles.buttonsText}>Akun & Toko Saya</Text>
+              <View style={styles.navigation}>
+                <MaterialCommunityIcons name={'store'} size={25} />
+                <Text style={styles.buttonsText}>Akun & Toko Saya</Text>
+              </View>
               <IonIcons name={'chevron-forward'} size={26} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => this.props.navigation.navigate('Cart')}
               style={styles.drawerScreens}
               activeOpacity={0.7}>
-              <Text style={styles.buttonsText}>Keranjang</Text>
+              <View style={styles.navigation}>
+                <IonIcons name={'cart'} size={25} />
+                <Text style={styles.buttonsText}>Keranjang</Text>
+              </View>
               <IonIcons name={'chevron-forward'} size={26} />
             </TouchableOpacity>
             <TouchableOpacity
@@ -55,7 +73,7 @@ class ProfileDrawer extends Component {
               onPress={() =>
                 AsyncStorage.removeItem(
                   'token',
-                  this.props.navigation.navigate('Auth'),
+                  this.props.navigation.replace('Auth'),
                 )
               }>
               <Text style={styles.logoutText}>Logout</Text>
@@ -84,6 +102,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 15,
   },
+  navigation: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   profileIconContainer: {
     width: '100%',
     height: '15%',
@@ -104,6 +127,7 @@ const styles = StyleSheet.create({
     margin: 15,
   },
   buttonsText: {
+    marginHorizontal: 5,
     fontSize: 16,
   },
   username: {
@@ -135,6 +159,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
 });
+
 const mapStateToProps = (state) => {
   return {
     user: state,

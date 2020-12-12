@@ -78,6 +78,7 @@ export default class Login extends Component {
                 onChangeText={(text) => this.setState({email: text})}
                 keyboardType={'email-address'}
               />
+
               <TextInput
                 style={styles.input}
                 autoCompleteType={'password'}
@@ -87,6 +88,7 @@ export default class Login extends Component {
                 value={password}
                 onChangeText={(text) => this.setState({password: text})}
               />
+
               <View style={styles.button}>
                 <Button
                   color={'#0d4e4e'}
@@ -96,6 +98,7 @@ export default class Login extends Component {
                   }}
                 />
               </View>
+
               <Text style={styles.loginText}>
                 Do not have an account? Please
                 <Text

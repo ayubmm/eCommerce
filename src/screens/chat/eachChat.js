@@ -18,13 +18,7 @@ import {connect} from 'react-redux';
 import Pusher from 'pusher-js/react-native';
 
 // Enable pusher logging - don't include this in production
-Pusher.logToConsole = true;
-
-var pusher = new Pusher('5debdef554206164cb9e', {
-  cluster: 'ap1',
-});
-
-var channel = pusher.subscribe('my-channel');
+// Pusher.logToConsole = true;
 
 class Chat extends Component {
   constructor(props) {
@@ -37,37 +31,51 @@ class Chat extends Component {
       refreshing: false,
     };
 
-    channel.bind('my-event', () => {
-      this.getChat();
-    });
+    if (this.props.user.email) {
+      var pusher = new Pusher('5debdef554206164cb9e', {
+        cluster: 'ap1',
+      });
+
+      var channel = pusher.subscribe('my-channel');
+
+      channel.bind('my-event', (data) => {
+        this.getChat();
+      });
+    }
   }
 
   sendChat() {
-    let form = new FormData();
-    form.append('message', this.state.message);
-    console.log('ini message ', form);
+    if (this.state.message) {
+      let form = new FormData();
+      form.append('message', this.state.message);
+      // console.log('ini message ', form);
 
-    const endpoint =
-      'https://tokonline.herokuapp.com/api/message/' + this.props.id_seller;
-    AsyncStorage.getItem('token').then((token) => {
-      console.log('mulai ambil chat');
-      fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: form,
-      })
-        .then((res) => res.json())
-        .then((resJson) => {
-          console.log('ini resJson dari kirim message', resJson);
-          this.setState({loading: true});
+      this.setState({message: ''});
+
+      const endpoint =
+        'https://tokonline.herokuapp.com/api/message/' + this.props.id_seller;
+      AsyncStorage.getItem('token').then((token) => {
+        console.log('mulai Kirim chat');
+        fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: form,
         })
-        .catch((err) => console.log('ini error dari get chat == ', err));
-    });
+          .then((res) => res.json())
+          .then((resJson) => {
+            // console.log('ini resJson dari kirim message', resJson);
+          })
+          .catch((err) => console.log('ini error dari get chat == ', err));
+      });
+    } else {
+      ToastAndroid.show('Tulis pesan anda terlebih dahulu!', 500);
+    }
   }
 
   getChat() {
+    this.setState({loading: true});
     const endpoint =
       'https://tokonline.herokuapp.com/api/message/' + this.props.id_seller;
     AsyncStorage.getItem('token').then((token) => {
@@ -79,7 +87,7 @@ class Chat extends Component {
       })
         .then((res) => res.json())
         .then((resJson) => {
-          console.log('ini resJson dari message', resJson);
+          // console.log('ini resJson dari message', resJson);
           this.setState(() => {
             resJson.data.sort((a, b) => a.id - b.id);
             return {chats: resJson.data, loading: false};
@@ -159,12 +167,15 @@ class Chat extends Component {
         <View style={styles.footer}>
           <TextInput
             value={this.state.message}
+            p
             style={styles.input}
             multiline={true}
             placeholder={'message...'}
             onChangeText={(text) => this.setState({message: text})}
           />
-          <TouchableOpacity onPress={() => this.sendChat()}>
+          <TouchableOpacity
+            onPress={() => this.sendChat()}
+            style={styles.sendButton}>
             <IonIcons name={'send'} size={45} color={'#eee'} />
           </TouchableOpacity>
         </View>
@@ -179,6 +190,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#0d4e4e',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sendButton: {
+    margin: 5,
   },
   footer: {
     flexDirection: 'row',
@@ -225,14 +239,14 @@ const styles = StyleSheet.create({
   },
   chatBubbleLeft: {
     backgroundColor: 'green',
-    padding: 5,
+    paddingHorizontal: 15,
     borderRadius: 10,
     borderTopLeftRadius: 0,
     maxWidth: '80%',
   },
   chatBubbleRight: {
     backgroundColor: '#0202ca',
-    padding: 5,
+    paddingHorizontal: 15,
     borderRadius: 10,
     borderTopRightRadius: 0,
     maxWidth: '80%',

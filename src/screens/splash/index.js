@@ -7,6 +7,7 @@ import {
   ToastAndroid,
   ActivityIndicator,
 } from 'react-native';
+import IonIcons from 'react-native-vector-icons/Ionicons';
 import {connect} from 'react-redux';
 
 class Splash extends Component {
@@ -15,6 +16,7 @@ class Splash extends Component {
   };
 
   getProfile(token) {
+    console.log('mulai getProfile...');
     setTimeout(() => {
       this.setState({loading: true});
     }, 500);
@@ -34,7 +36,10 @@ class Splash extends Component {
           this.updateState(resjson.data);
         }
       })
-      .catch((err) => console.log('error dari splash profile', err));
+      .catch((err) => {
+        console.log('error dari splash profile', err);
+        this.props.navigation.replace('Drawer');
+      });
   }
 
   componentWillUnmount() {
@@ -53,6 +58,7 @@ class Splash extends Component {
 
   tokenCheck() {
     AsyncStorage.getItem('token').then((res) => {
+      console.log('ini token ', res);
       if (res) {
         this.getProfile(res);
       } else {
@@ -70,10 +76,11 @@ class Splash extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.splashText}> Splash </Text>
+        <IonIcons name={'cart-outline'} color={'white'} size={180} />
+        <Text style={styles.splashText}> TOKONLINE </Text>
         <View style={styles.ActivityIndicator}>
           {this.state.loading && (
-            <ActivityIndicator size={25} color={'black'} />
+            <ActivityIndicator size={25} color={'white'} />
           )}
         </View>
       </View>
@@ -89,8 +96,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#0d4e4e',
   },
   splashText: {
-    fontSize: 60,
+    fontSize: 45,
     fontWeight: 'bold',
+    color: 'white',
   },
   ActivityIndicator: {
     margin: 30,

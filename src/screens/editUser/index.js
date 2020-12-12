@@ -124,8 +124,8 @@ class EditUser extends Component {
   }
 
   checkPhone() {
-    if(this.state.phone) {
-      return this.state.phone.toString()
+    if (this.state.phone) {
+      return this.state.phone.toString();
     }
     return '';
   }
