@@ -129,7 +129,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.ecommerce"
+        applicationId "com.tokonline"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
