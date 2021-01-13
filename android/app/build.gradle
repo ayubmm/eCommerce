@@ -129,7 +129,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.tokonline"
+        applicationId "com.tokonline_pit"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

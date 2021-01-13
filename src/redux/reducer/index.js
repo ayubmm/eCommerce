@@ -18,9 +18,6 @@ export default function user(
   switch (action.type) {
     case 'CHANGE/USER':
       return {...state, ...action.payload};
-
-    case 'DELETE/USER':
-      return action.payload;
   }
 
   return state;

@@ -1,4 +1,4 @@
-package com.ecommerce;
+package com.tokonline_pit;
 
 import com.facebook.react.ReactActivity;
 
